@@ -11,7 +11,7 @@ DEFAULT_LOG_LEVEL = logging.DEBUG
 
 class Logger:
     LOG_COLORS = {
-        "INFO": "\033[32m",
+        "INFO": "\033[0m",
         "DEBUG": "\033[33m",
         "WARN": "\033[35m",
         "ERROR": "\033[31m",
