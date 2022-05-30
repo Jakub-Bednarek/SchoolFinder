@@ -1,7 +1,9 @@
 from app import App
+from data_reader import read_data
 
 def main():
     app = App()
+    read_data("TrasyRowerowe.shp")
     app.run()
 
 if __name__ == "__main__":
