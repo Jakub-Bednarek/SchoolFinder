@@ -9,7 +9,6 @@ DEFAULT_LOG_FILE = "logs/app.log"
 DEFAULT_LOG_COLOR = "INFO"
 DEFAULT_LOG_LEVEL = logging.DEBUG
 
-
 class Logger:
     LOG_COLORS = {
         "INFO": "\033[32m",
@@ -43,21 +42,25 @@ class Logger:
         self.__root_logger.log(severity, msg)
         
     def __init__(self, file_path: str = DEFAULT_LOG_FILE):
-        self.__start(file_path)
+        try:
+            self.__start(file_path)
+            self.log_msg(f"Created logger writing to file {file_path}", logging.INFO)
+        except:
+            self.log_msg(f"Failed to create logger writing to file {file_path}", logging.INFO)
         
-    def __create_paths(self, dest_path: str):
-        tokens = dest_path.split("/")
-        
-        if len(tokens) <= 1:
-            return
-        
-        path = self.remove_file_name(tokens)
+    def create_paths(self, dest_path: str):
+        path = self.create_log_path_str(dest_path)
         if os.path.exists(path):
             return
         else:
             os.makedirs(path)
             
-    def remove_file_name(self, tokens: List):
+    def create_log_path_str(self, dest_path: str):
+        tokens = dest_path.split("/")
+        
+        if len(tokens) <= 1:
+            return dest_path
+        
         path = str(pathlib.Path().absolute())
         for token in tokens[0:len(tokens) - 1]:
             path += "/" + token
@@ -65,7 +68,7 @@ class Logger:
         return path
     
     def __start(self, file_path: str):
-        self.__create_paths(file_path)
+        self.create_paths(file_path)
         
         file_handle = logging.FileHandler(filename=file_path, mode="a", encoding="utf-8")
         file_handle.setFormatter(self.DefaultFormatter(self.FORMAT))
@@ -78,7 +81,7 @@ class Logger:
         self.__root_logger.addHandler(console_handle)
         
 logger = Logger()        
-        
+
 def log_inf(msg):
     logger.log_msg(msg, logging.INFO)
     
