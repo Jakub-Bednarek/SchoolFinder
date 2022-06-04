@@ -1,7 +1,7 @@
 1. Realizowane zadanie
     Zadaniem realizowanym w ramach projekut z kursu Języki Skryptowe będzie zbudowanie aplikacji,</br>
-    pozwalającej na określenie najlepszego polożenia dla zbudowania nowej szkoly we Wroclawiu na podstawie</br>
-    danych o: rozłożeniu szkół, przedszkoli, drog, lokalizacjach najpopularniejszych obiektów wykorzystywanych publicznie.</br>
+    pozwalającej na określenie najlepszego polożenia dla zbudowania nowej szkoly we Wroclawiu na podstawie
+    danych o:</br> rozłożeniu szkół, przedszkoli, drog, lokalizacjach najpopularniejszych obiektów wykorzystywanych publicznie.</br>
 
 2. Wykaz podstawowych funkcjonalności
     -Ładowanie plików z danymi</br>
