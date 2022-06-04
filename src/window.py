@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QGroupBox, QWidget, QLineE
 from helpers.logger import log_inf, log_err
 
 from widgets.map_explorer import MapExplorer
+from widgets.splash_screen import add_finished
 
 DEFAULT_WINDOW_CONFIG_FILE = "conf/window.ini"
 
@@ -15,6 +16,7 @@ class MainWindow(QMainWindow):
         
         super(MainWindow, self).__init__()
         self.initUI()
+        add_finished()
         
         log_inf("Successfully MainWindow")
         
