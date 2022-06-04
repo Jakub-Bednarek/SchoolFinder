@@ -70,7 +70,7 @@ class Logger:
     def __start(self, file_path: str):
         self.create_paths(file_path)
         
-        file_handle = logging.FileHandler(filename=file_path, mode="a", encoding="utf-8")
+        file_handle = logging.FileHandler(filename=file_path, mode="w", encoding="utf-8")
         file_handle.setFormatter(self.DefaultFormatter(self.FORMAT))
         
         console_handle = logging.StreamHandler(stream=sys.stdout)
