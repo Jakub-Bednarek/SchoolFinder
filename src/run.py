@@ -4,7 +4,6 @@ from data_reader import read_data
 
 def main():
     app = App()
-    read_data("TrasyRowerowe.shp")
     app.run()
 
 
