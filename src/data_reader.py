@@ -5,6 +5,7 @@ from shapely.geometry import shape
 
 DATA_PATH = "res/data"
 
+
 def read_data(file_name: str):
     path = f"{os.path.abspath('.')}/{DATA_PATH}/{file_name}"
     shape = shapefile.Reader(path)
