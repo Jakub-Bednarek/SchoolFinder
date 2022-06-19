@@ -3,6 +3,7 @@ import asyncio
 
 from app import App
 
+
 async def main():
     app = App()
     await app.run()
