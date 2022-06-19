@@ -2,12 +2,14 @@ import dotenv
 import os
 
 from requests_oauthlib import OAuth1Session
-from helpers.logger import log_err
-from post_tweet import TweetNotPostedException, post, check_return_code
+from helpers.logger import log_err, log_wrn
 
 REQUEST_TOKEN_URL = "https://api.twitter.com/oauth/request_token?oauth_callback=oob&x_auth_access_type=write"
 BASE_AUTHORIZATION_URL = "https://api.twitter.com/oauth/authorize"
 ACCESS_TOKEN_URL = "https://api.twitter.com/oauth/access_token"
+
+class InvalidPinException(Exception):
+    pass
 
 class Authenticator:
     def __init__(self):
@@ -54,7 +56,11 @@ class Authenticator:
             verifier=pin
         )
         
-        oauth_tokens = oauth.fetch_access_token(ACCESS_TOKEN_URL)
+        try:
+            oauth_tokens = oauth.fetch_access_token(ACCESS_TOKEN_URL)
+        except Exception as e:
+            raise InvalidPinException("Couldn't authenticate user with PIN!")
+        
         self.__access_token = oauth_tokens['oauth_token']
         self.__access_secret = oauth_tokens['oauth_token_secret']
         
@@ -62,16 +68,5 @@ class Authenticator:
         print(self.__access_secret)
         
         
-a = Authenticator()
-
-a.fetch_api_oauth_tokens()
-print(a.get_authorization_url())
-pin = input("Pin:")
-a.sign_in_with_pin(pin)
-resp = post(a.get_access_token(), a.get_access_token_secret(), {"text": "Hello world again!"})
-
-
-try:
-    check_return_code(resp)
-except TweetNotPostedException as e:
-    print(e)
+authenticator = Authenticator()
+authenticator.fetch_api_oauth_tokens()

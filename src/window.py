@@ -4,8 +4,6 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QGroupBox, QWidget, QLineE
 
 from helpers.logger import log_inf, log_err
 
-from widgets.splash_screen import add_finished
-
 DEFAULT_WINDOW_CONFIG_FILE = "conf/window.ini"
 
 
@@ -15,7 +13,6 @@ class MainWindow(QMainWindow):
 
         super(MainWindow, self).__init__()
         self.initUI()
-        add_finished()
 
         log_inf("Successfully MainWindow")
 
@@ -60,7 +57,6 @@ class MainWindow(QMainWindow):
     def __create_main_window(self):
         self.setGeometry(0, 0, 1080, 720)
         self.setWindowTitle("School finder")
-        self.__create_map_area()
         self.__create_parameters_panel()
         self.__create_central_widget()
 
@@ -70,12 +66,11 @@ class MainWindow(QMainWindow):
         self.__central_widget = QWidget()
 
         central_widget_layout = QGridLayout()
-        central_widget_layout.addWidget(self.__map_groupbox, 0, 0)
         central_widget_layout.addWidget(self.__parameters_panel, 0, 1)
 
         self.__central_widget.setLayout(central_widget_layout)
 
-    def __create_map_area(self):
+    def __create_tweet_area(self):
         map_area_layout = QGridLayout()
         self.__map_groupbox = QGroupBox()
         self.__map_groupbox.setLayout(map_area_layout)
@@ -99,3 +94,13 @@ class MainWindow(QMainWindow):
         parameters_panel_layout.addWidget(depth_max_area, 2, 1)
 
         self.__parameters_panel.setLayout(parameters_panel_layout)
+
+main_window = None
+
+def set_main_window(window):
+    global main_window
+    main_window = window
+    
+def get_main_window():
+    global main_window
+    return main_window
