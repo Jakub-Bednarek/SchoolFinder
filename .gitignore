@@ -12,3 +12,6 @@ logs/
 
 #env
 .env
+
+#other
+res/html_maps

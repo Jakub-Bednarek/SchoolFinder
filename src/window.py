@@ -1,11 +1,9 @@
 import configparser
 
-from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QGroupBox, QWidget, QLineEdit
 
 from helpers.logger import log_inf, log_err
 
-from widgets.map_explorer import MapExplorer
 from widgets.splash_screen import add_finished
 
 DEFAULT_WINDOW_CONFIG_FILE = "conf/window.ini"
@@ -79,11 +77,6 @@ class MainWindow(QMainWindow):
 
     def __create_map_area(self):
         map_area_layout = QGridLayout()
-
-        self.__map_explorer = MapExplorer()
-        map_area_layout.addWidget(self.__map_explorer)
-        self.__map_explorer.start()
-
         self.__map_groupbox = QGroupBox()
         self.__map_groupbox.setLayout(map_area_layout)
 
