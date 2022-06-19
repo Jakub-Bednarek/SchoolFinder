@@ -1,5 +1,3 @@
-import pathlib
-
 from PyQt5 import QtWidgets, QtWebEngineWidgets
 from map_managers.map_manager import generate_map_html
 from helpers.logger import log_inf, log_wrn
