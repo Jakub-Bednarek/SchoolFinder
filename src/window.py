@@ -88,12 +88,13 @@ class MainWindow(QMainWindow):
         def __str__(self):
             return f"Seconds: {self.seconds}, Minutes: {self.minutes}, Hours: {self.hours}, Days: {self.days}, datetime: {self.date_time}"
 
-    def __init__(self):
+    def __init__(self, screen):
         log_inf("Initializing MainWindow")
 
         super(MainWindow, self).__init__()
+        self.__screen = screen
         self.initUI()
-        self.resize(800, 500)
+        self.resize(1000, 500)
         self.__timer = None
         self.__settings = self.Settings()
         self.has_script = False
@@ -151,8 +152,8 @@ class MainWindow(QMainWindow):
         self.__central_widget = QWidget()
 
         central_widget_layout = QGridLayout()
-        central_widget_layout.addWidget(self.__tweet_area)
-        central_widget_layout.addWidget(self.__dock, 0, 1)
+        central_widget_layout.addWidget(self.__tweet_area, 0, 0, 1, 2)
+        central_widget_layout.addWidget(self.__dock, 0, 2)
 
         self.__central_widget.setLayout(central_widget_layout)
 
@@ -175,6 +176,7 @@ class MainWindow(QMainWindow):
 
         layout = QGridLayout()
         self.__tweet_text = QPlainTextEdit()
+        self.__test_tweet_text = QPlainTextEdit()
 
         self.__submit_button = QPushButton("Submit")
         self.__submit_button.setIcon(QIcon("res/icons/twitter_logo.png"))
@@ -183,10 +185,19 @@ class MainWindow(QMainWindow):
         self.__stop_button = QPushButton("Stop")
         self.__stop_button.setIcon(QIcon("res/icons/stop.png"))
         self.__stop_button.clicked.connect(self.__stop_timer)
-
-        layout.addWidget(self.__tweet_text, 0, 0, 1, 2)
-        layout.addWidget(self.__submit_button, 1, 0)
-        layout.addWidget(self.__stop_button, 1, 1)
+        
+        self.__test_output_button = QPushButton("Check")
+        #self.__test_output_button.setIcon(QIcon(''))
+        self.__test_output_button.clicked.connect(self.__handle_test_tweet_area)
+        
+        layout.addWidget(QLabel("Write your tweet here!"), 0, 0, 1, 3)
+        layout.addWidget(self.__tweet_text, 1, 0, 1, 3)
+        layout.addWidget(QLabel("Check output here!"), 2, 0, 1, 3)
+        layout.addWidget(self.__test_tweet_text, 3, 0, 1, 3)
+        layout.addWidget(self.__submit_button, 4, 0)
+        layout.addWidget(self.__stop_button, 4, 1)
+        layout.addWidget(self.__test_output_button, 4, 2)
+        self.__tweet_area.setMinimumWidth(int(self.size().width() / 5 * 3))
         self.__tweet_area.setLayout(layout)
 
     def __create_schedule_intervals_box(self):
@@ -328,6 +339,23 @@ class MainWindow(QMainWindow):
         except TweetNotPostedException as e:
             self.__show_error_dialog("There was a problem with posting your tweet! Check if content is not same as last tweet!")
             log_err(e)
+            
+    def __gather__all_tweet_data(self):
+        content = self.__tweet_text.toPlainText()
+        if self.has_script:
+            var_script_pair = self.__convert_scripts()
+            if not var_script_pair:
+                return None
+            
+            content = self.__handle_tweet_vals_replacement(content, var_script_pair)
+            if not content:
+                return None
+        if not content:
+            self.__show_error_dialog("Tweet area is empty!")
+            return None
+        
+        return content
+        
 
     def __gather_settings(self):
         settings = self.Settings()
@@ -456,9 +484,13 @@ class MainWindow(QMainWindow):
         
         return replaced_content
     
+    def __handle_test_tweet_area(self):
+        content = self.__gather__all_tweet_data()
         
-
-
+        if content:
+            self.__test_tweet_text.setPlainText(content)
+    
+        
 main_window = None
 
 
