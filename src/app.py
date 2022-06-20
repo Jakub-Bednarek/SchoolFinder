@@ -14,14 +14,14 @@ class App:
         self.__screen = self.__app.primaryScreen()
         self.main_window = MainWindow()
         set_main_window(self.main_window)
-        #self.login = LoginScreen(self.__screen)
+        # self.login = LoginScreen(self.__screen)
 
     def __del__(self):
         log_inf("Destroyed app")
 
     def run(self):
         log_inf("Starting app")
-        #self.login.show()
+        # self.login.show()
         self.main_window.show()
         sys.exit(self.__app.exec_())
 
