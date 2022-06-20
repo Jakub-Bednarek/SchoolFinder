@@ -2,15 +2,13 @@ import configparser
 import time
 import os
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (
     QMainWindow,
     QGridLayout,
     QWidget,
     QPlainTextEdit,
-    QFrame,
     QLineEdit,
-    QDockWidget,
     QScrollArea,
     QVBoxLayout,
     QPushButton,
@@ -20,7 +18,7 @@ from PyQt5.QtWidgets import (
     QLabel,
     QFileDialog,
     QErrorMessage,
-    QMessageBox
+    QMessageBox,
 )
 from PyQt5.QtGui import QIcon
 
@@ -38,6 +36,10 @@ SCRIPT_PATH_PREFIX = "script_outputs"
 DEFAULT_WINDOW_CONFIG_FILE = "conf/window.ini"
 
 
+class InvalidSettingException(Exception):
+    pass
+
+
 class MainWindow(QMainWindow):
     class Settings:
         def __init__(self):
@@ -51,36 +53,61 @@ class MainWindow(QMainWindow):
             self.is_interval = False
 
         def add_seconds(self, seconds):
-            if seconds is not None and seconds >= 0 and seconds < 60:
-                self.seconds = seconds
-                self.is_interval = True
-
-            return self
+            if seconds is not None:
+                if seconds >= 0 and seconds < 60:
+                    self.seconds = seconds
+                    self.is_interval = True
+                else:
+                    raise InvalidSettingException(
+                        f"Invalid value for seconds variable: range 0-59, provided: {seconds}"
+                    )
 
         def add_minutes(self, minutes):
-            if minutes is not None and minutes >= 0 and minutes < 60:
-                self.minutes = minutes
-                self.is_interval = True
-
-            return self
+            if minutes is not None:
+                if minutes >= 0 and minutes < 60:
+                    self.minutes = minutes
+                    self.is_interval = True
+                else:
+                    raise InvalidSettingException(
+                        f"Invalid value for minutes variable: range 0-59, provided: {minutes}"
+                    )
 
         def add_hours(self, hours):
-            if hours is not None and hours >= 0 and hours < 24:
-                self.hours = hours
-                self.is_interval = True
+            if hours is not None:
+                if hours >= 0 and hours < 24:
+                    self.hours = hours
+                    self.is_interval = True
+                else:
+                    raise InvalidSettingException(
+                        f"Invalid value for hours variable: range 0-23, provided: {hours}"
+                    )
 
             return self
 
         def add_days(self, days):
-            if days is not None and days > 0 and 360:
-                self.days = days
-                self.is_interval = True
+            if days is not None:
+                if days > 0 and 360:
+                    self.days = days
+                    self.is_interval = True
+                else:
+                    raise InvalidSettingException(
+                        f"Invalid value for days variable: range 0-365, provided: {days}"
+                    )
 
             return self
 
         def add_date_time(self, datetime):
-            self.date_time = datetime
-            self.is_scheduled = True
+            current_date = QtCore.QDateTime.currentDateTime().date()
+            current_time = QtCore.QDateTime.currentDateTime().time()
+
+            if datetime is not None:
+                if datetime.date() > current_date and datetime.time() > current_time:
+                    self.date_time = datetime
+                    self.is_scheduled = True
+                else:
+                    raise InvalidSettingException(
+                        f"Date variable can't be in the past!"
+                    )
 
         def add_scripts(self, scripts):
             self.scripts = scripts
@@ -158,10 +185,8 @@ class MainWindow(QMainWindow):
         self.__central_widget.setLayout(central_widget_layout)
 
     def __create_dock(self):
-        self.__dock = QDockWidget("Parameters")
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.__dock)
+        self.__dock = QWidget()
         scroll = QScrollArea()
-        self.__dock.setWidget(scroll)
         scroll.setWidgetResizable(True)
 
         parameters = QWidget()
@@ -170,6 +195,9 @@ class MainWindow(QMainWindow):
         vlay.addWidget(self.__create_schedule_intervals_box())
         vlay.addWidget(self.__create_schedule_date())
         vlay.addWidget(self.__create_script_box())
+
+        docklayout = QVBoxLayout(self.__dock)
+        docklayout.addWidget(scroll)
 
     def __create_tweet_area(self):
         self.__tweet_area = QWidget()
@@ -185,11 +213,11 @@ class MainWindow(QMainWindow):
         self.__stop_button = QPushButton("Stop")
         self.__stop_button.setIcon(QIcon("res/icons/stop.png"))
         self.__stop_button.clicked.connect(self.__stop_timer)
-        
+
         self.__test_output_button = QPushButton("Check")
-        #self.__test_output_button.setIcon(QIcon(''))
+        # self.__test_output_button.setIcon(QIcon(''))
         self.__test_output_button.clicked.connect(self.__handle_test_tweet_area)
-        
+
         layout.addWidget(QLabel("Write your tweet here!"), 0, 0, 1, 3)
         layout.addWidget(self.__tweet_text, 1, 0, 1, 3)
         layout.addWidget(QLabel("Check output here!"), 2, 0, 1, 3)
@@ -202,6 +230,10 @@ class MainWindow(QMainWindow):
 
     def __create_schedule_intervals_box(self):
         widget = QWidget()
+
+        interval_label = QLabel()
+        interval_label.setText("<font color=#2798f5>INTERVALS</font>")
+        interval_label.setFont(QtGui.QFont("Open sans", weight=QtGui.QFont.Bold))
         seconds_checkbox = QCheckBox("Seconds")
         seconds_checkbox.stateChanged.connect(self.__change_seconds_state)
         minutes_checkbox = QCheckBox("Minutes")
@@ -221,34 +253,43 @@ class MainWindow(QMainWindow):
         self.__days_line.setEnabled(False)
 
         layout = QGridLayout()
-        layout.addWidget(seconds_checkbox, 0, 0)
-        layout.addWidget(minutes_checkbox, 1, 0)
-        layout.addWidget(hours_checkbox, 2, 0)
-        layout.addWidget(days_checkbox, 3, 0)
-        layout.addWidget(self.__seconds_line, 0, 1)
-        layout.addWidget(self.__minutes_line, 1, 1)
-        layout.addWidget(self.__hours_line, 2, 1)
-        layout.addWidget(self.__days_line, 3, 1)
+        layout.addWidget(interval_label, 0, 0)
+        layout.addWidget(seconds_checkbox, 1, 0)
+        layout.addWidget(minutes_checkbox, 2, 0)
+        layout.addWidget(hours_checkbox, 3, 0)
+        layout.addWidget(days_checkbox, 4, 0)
+        layout.addWidget(self.__seconds_line, 1, 1)
+        layout.addWidget(self.__minutes_line, 2, 1)
+        layout.addWidget(self.__hours_line, 3, 1)
+        layout.addWidget(self.__days_line, 4, 1)
+        layout.setSpacing(10)
 
         widget.setLayout(layout)
         return widget
 
     def __create_schedule_date(self):
         widget = QWidget()
+        schedule_label = QLabel()
+        schedule_label.setText("<font color=#2798f5>SCHEDULE</font>")
+        schedule_label.setFont(QtGui.QFont("Open sans", weight=QtGui.QFont.Bold))
         schedule_switch = QCheckBox("Date")
         schedule_switch.stateChanged.connect(self.__change_date_time_state)
         self.__date_time = QDateTimeEdit()
         self.__date_time.setEnabled(False)
 
         layout = QGridLayout()
-        layout.addWidget(schedule_switch, 0, 0)
-        layout.addWidget(self.__date_time, 0, 1)
+        layout.addWidget(schedule_label, 0, 0)
+        layout.addWidget(schedule_switch, 1, 0)
+        layout.addWidget(self.__date_time, 1, 1)
         widget.setLayout(layout)
         return widget
 
     def __create_script_box(self):
         widget = QWidget()
 
+        scripts_label = QLabel()
+        scripts_label.setText("<font color=#2798f5>SCRIPTS</font>")
+        scripts_label.setFont(QtGui.QFont("Open sans", weight=QtGui.QFont.Bold))
         self.__scripts_layout = QVBoxLayout()
         self.__scripts_widget = QWidget()
         self.__scripts_widget_layout = QVBoxLayout()
@@ -257,8 +298,13 @@ class MainWindow(QMainWindow):
         add_script_button = QPushButton("Add new script")
         add_script_button.clicked.connect(self.__add_new_script)
 
-        self.__scripts_layout.addWidget(self.__scripts_widget)
-        self.__scripts_layout.addWidget(add_script_button)
+        self.__scripts_layout.addWidget(scripts_label, alignment=QtCore.Qt.AlignLeft)
+        self.__scripts_layout.addWidget(
+            self.__scripts_widget, alignment=QtCore.Qt.AlignLeft
+        )
+        self.__scripts_layout.addWidget(
+            add_script_button, alignment=QtCore.Qt.AlignLeft
+        )
 
         widget.setLayout(self.__scripts_layout)
         self.__scripts_widget.setLayout(self.__scripts_widget_layout)
@@ -268,9 +314,11 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         layout = QHBoxLayout()
         label = QLabel("Name")
+
         text_area = QLineEdit()
-        
+        text_area.setMinimumWidth(int(self.size().width() / 13))
         self.__scripts_val_list.append(text_area)
+
         button = QPushButton("Add new script")
         button.clicked.connect(self.__choose_script_path)
 
@@ -278,9 +326,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(text_area)
         layout.addWidget(button)
         widget.setLayout(layout)
-        
-        self.has_script = True
 
+        self.has_script = True
         self.__scripts_widget_layout.addWidget(widget)
 
     def __choose_script_path(self):
@@ -311,6 +358,9 @@ class MainWindow(QMainWindow):
     # tweet posting
     def __post_tweet(self):
         self.__settings = self.__gather_settings()
+        if not self.__settings:
+            return
+
         if self.__settings.is_scheduled or self.__settings.is_interval:
             self.__start_timer()
         else:
@@ -322,14 +372,14 @@ class MainWindow(QMainWindow):
             var_script_pair = self.__convert_scripts()
             if not var_script_pair:
                 return
-            
+
             content = self.__handle_tweet_vals_replacement(content, var_script_pair)
             if not content:
                 return
         if not content:
             self.__show_error_dialog("Tweet area is empty!")
             return
-        
+
         return_code = post({"text": content})
 
         try:
@@ -337,45 +387,50 @@ class MainWindow(QMainWindow):
             self.__show_info_dialog("Your tweet has been posted successfully!")
             log_inf(f"Posted successfully")
         except TweetNotPostedException as e:
-            self.__show_error_dialog("There was a problem with posting your tweet! Check if content is not same as last tweet!")
+            self.__show_error_dialog(
+                "There was a problem with posting your tweet! Check if content is not same as last tweet!"
+            )
             log_err(e)
-            
+
     def __gather__all_tweet_data(self):
         content = self.__tweet_text.toPlainText()
         if self.has_script:
             var_script_pair = self.__convert_scripts()
             if not var_script_pair:
                 return None
-            
+
             content = self.__handle_tweet_vals_replacement(content, var_script_pair)
             if not content:
                 return None
         if not content:
             self.__show_error_dialog("Tweet area is empty!")
             return None
-        
+
         return content
-        
 
     def __gather_settings(self):
         settings = self.Settings()
 
-        if self.__seconds_line.isEnabled():
-            settings.add_seconds(self.__convert_val(self.__seconds_line.text()))
-        if self.__minutes_line.isEnabled():
-            settings.add_minutes(self.__convert_val(self.__minutes_line.text()))
-        if self.__hours_line.isEnabled():
-            settings.add_hours(self.__convert_val(self.__hours_line.text()))
-        if self.__days_line.isEnabled():
-            settings.add_days(self.__convert_val(self.__days_line.text()))
-        if self.__date_time.isEnabled():
-            settings.add_date_time(self.__date_time.dateTime())
+        try:
+            if self.__seconds_line.isEnabled():
+                settings.add_seconds(self.__convert_val(self.__seconds_line.text()))
+            if self.__minutes_line.isEnabled():
+                settings.add_minutes(self.__convert_val(self.__minutes_line.text()))
+            if self.__hours_line.isEnabled():
+                settings.add_hours(self.__convert_val(self.__hours_line.text()))
+            if self.__days_line.isEnabled():
+                settings.add_days(self.__convert_val(self.__days_line.text()))
+            if self.__date_time.isEnabled():
+                settings.add_date_time(self.__date_time.dateTime())
+        except InvalidSettingException as e:
+            self.__show_error_dialog(str(e))
+            return None
 
         return settings
 
     def __check_interval_tweet(self):
         day, hour, min, sec = map(int, time.strftime("%d %H %M %S").split())
-        
+
         if self.__settings.seconds:
             if sec % self.__settings.seconds != 0:
                 return
@@ -425,12 +480,12 @@ class MainWindow(QMainWindow):
             return int(val)
         except ValueError as e:
             log_err(e)
-            
+
     def __show_error_dialog(self, text):
         error_dialog = QErrorMessage()
         error_dialog.showMessage(text)
         error_dialog.exec_()
-        
+
     def __show_info_dialog(self, text):
         dialog = QMessageBox.information(self, "Info!", text)
 
@@ -446,23 +501,25 @@ class MainWindow(QMainWindow):
                 if var_script_pair:
                     scripts_val_dict[var_script_pair[0]] = var_script_pair[1]
             except:
-                self.__show_error_dialog("Error: one of areas is not filled correctly, can't submit!")
+                self.__show_error_dialog(
+                    "Error: one of areas is not filled correctly, can't submit!"
+                )
                 return None
-            
+
         return scripts_val_dict
-                
+
     def __load_script_value_from_file(self, path):
         filename = os.path.basename(path)[:-3]
         filename = f"{SCRIPT_PATH_PREFIX}/{filename}.txt"
-        
+
         with open(filename, "r") as file:
             return file.read()
-        
+
     def __build_var_script_pair(self, text_area, script):
         try:
             var = self.__check_var_value(text_area)
             script_val = self.__load_script_value_from_file(script)
-            
+
             print(f"VAR: |{var}| len: {len(var)}")
             if len(var) > 0 and script_val:
                 return (var, script_val)
@@ -471,26 +528,27 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.__show_error_dialog(f"Failed to load var name or script, error: {e}")
             return None
-                
-        
+
     def __check_var_value(self, text_area):
         return text_area.text() if not None else None
-    
+
     def __handle_tweet_vals_replacement(self, content, var_script_dict):
         replaced_content, missing_vals = parse_tweet(content, var_script_dict)
         if missing_vals:
-            self.__show_error_dialog(f"Atleast one of the script variables didn't match in tweet content: {missing_vals}")
+            self.__show_error_dialog(
+                f"Atleast one of the script variables didn't match in tweet content: {missing_vals}"
+            )
             return None
-        
+
         return replaced_content
-    
+
     def __handle_test_tweet_area(self):
         content = self.__gather__all_tweet_data()
-        
+
         if content:
             self.__test_tweet_text.setPlainText(content)
-    
-        
+
+
 main_window = None
 
 
