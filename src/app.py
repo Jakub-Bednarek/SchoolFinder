@@ -25,7 +25,7 @@ class App:
     def run(self):
         log_inf("Starting app")
         self.login.show()
-        #self.main_window.show()
+        
         sys.exit(self.__app.exec_())
 
     def check_if_login_success(self):

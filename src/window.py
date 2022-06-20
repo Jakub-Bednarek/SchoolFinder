@@ -21,7 +21,8 @@ from PyQt5.QtWidgets import (
     QErrorMessage,
     QMessageBox,
     qApp,
-    QAction
+    QAction,
+    QDesktopWidget,
 )
 from PyQt5.QtGui import QIcon
 
@@ -99,11 +100,11 @@ class MainWindow(QMainWindow):
             return self
 
         def add_date_time(self, datetime):
-            current_date = QtCore.QDateTime.currentDateTime().date()
-            current_time = QtCore.QDateTime.currentDateTime().time()
+            current_date = QtCore.QDateTime.currentDateTime()
 
             if datetime is not None:
-                if datetime.date() > current_date and datetime.time() > current_time:
+                print(f"datetime: {datetime}, current: {current_date}")
+                if datetime > current_date:
                     self.date_time = datetime
                     self.is_scheduled = True
                 else:
@@ -121,47 +122,141 @@ class MainWindow(QMainWindow):
         log_inf("Initializing MainWindow")
 
         super(MainWindow, self).__init__()
-        self.__screen = screen
         self.initUI()
         self.resize(1000, 500)
         self.__timer = None
         self.__settings = self.Settings()
         self.has_script = False
+        self.__load_config(DEFAULT_WINDOW_CONFIG_FILE)
 
         log_inf("Successfully MainWindow")
 
-    def __del__(self):
-        self.__save_config(DEFAULT_WINDOW_CONFIG_FILE)
-
-        log_inf("Destroyed window")
-
     # config stuff
     def __load_config(self, file_name: str):
-        pass
+        log_inf(f"Loading config file {file_name}")
+        self.__config = configparser.ConfigParser()
+        self.__config.read(DEFAULT_WINDOW_CONFIG_FILE)
+        
+        try:
+            self.__load_window_title_conf()
+            self.__load_window_size_conf()
+            self.__load_window_pos_conf()
+            
+            self.__load_interval_values_conf()
+            self.__load_schedule_values_conf()
+            
+            self.__load_twitter_area_conf()
+            log_inf(f"Loaded config file {file_name}")
+        except Exception as e:
+            log_inf(f"Failed to load config file {file_name}, error: {e}")
+            self.__show_error_dialog(str(e))
 
     def __save_config(self, file_name: str):
         config = configparser.ConfigParser()
 
         config["Default"] = {}
-        config["Default"]["style"] = "default"
-        config["Default"]["window_name"] = "School finder"
-        config["Dimensions"] = {}
-        config["Dimensions"]["window_width"] = "200"
-        config["Dimensions"]["window_height"] = "200"
-        config["Dimensions"]["window_x_pos"] = "100"
-        config["Dimensions"]["window_y_pos"] = "100"
-        config["Dimensions"]["fullscreen"] = "False"
-
+        config["Default"]["window_name"] = self.windowTitle()
+        
+        config = self.__save_window_values(config)
+        config = self.__save_parameters_values(config)
+        config = self.__save_twitter_area(config)
+        
         try:
-            with open(file_name, "w") as configfile:
+            with open(file_name, 'w') as configfile:
                 config.write(configfile)
-
-            log_inf(f"Saved window conf file {file_name}")
-        except:
-            log_err(f"Failed to write config to file {file_name}")
+            log_inf(f"Saved config file {file_name}")
+        except Exception as e:
+            log_err(f"Failed to save config file {file_name}, error: {e}")
             
-    def __load_window_size(self):
-        pass
+    def __save_window_values(self, config):
+        config["Dimensions"] = {}
+        config["Dimensions"]["window_width"] = str(self.size().width())
+        config["Dimensions"]["window_height"] = str(self.size().height())
+        config["Dimensions"]["window_x_pos"] = str(self.pos().x())
+        config["Dimensions"]["window_y_pos"] = str(self.pos().y())
+        
+        return config
+            
+    def __save_parameters_values(self, config):
+        config["Parameters"] = {}
+        settings = self.__gather_settings()
+    
+        if not settings:
+            log_err("Failed to save parameters settings")
+            return
+        
+        if settings.seconds:
+            config['Parameters']['seconds'] = str(settings.seconds)
+        else:
+            config['Parameters']['seconds'] = "0"
+        if settings.minutes:
+            config['Parameters']['minutes'] = str(settings.minutes)
+        else:
+            config['Parameters']['minutes'] = "0"
+        if settings.hours:
+            config['Parameters']['hours'] = str(settings.hours)
+        else:
+            config['Parameters']['hours'] = "0"
+        if settings.days:
+            config['Parameters']['days'] = str(settings.days)
+        else:
+            config['Parameters']['days'] = "0"
+        if settings.date_time:
+            config['Parameters']['date'] = str(settings.date_time.toString('yyyy,M,d,h,m,s'))
+        
+        return config
+    
+    def __save_twitter_area(self, config):
+        config['Twitter area'] = {}
+        config['Twitter area']['content'] = self.__tweet_text.toPlainText()
+        
+        return config
+     
+    #Window config loading functions
+    def __load_window_title_conf(self):
+        if 'Default' in self.__config:
+            if 'window_name' in self.__config['Default']:
+                self.setWindowTitle(self.__config['Default']['window_name'])
+                
+    def __load_window_size_conf(self):
+        if 'Dimensions' in self.__config:
+            if 'window_width' in self.__config['Dimensions']:
+                self.setFixedWidth(int(self.__config['Dimensions']['window_width']))
+            if 'window_height' in self.__config['Dimensions']:
+                self.setFixedHeight(int(self.__config['Dimensions']['window_height']))
+                
+    def __load_window_pos_conf(self):
+        screen = QDesktopWidget().screenGeometry()
+        if 'Dimensions' in self.__config:
+            if 'window_x_pos' in self.__config['Dimensions'] and 'window_y_pos' in self.__config['Dimensions']:
+                x = int(self.__config['Dimensions']['window_x_pos'])
+                y = int(self.__config['Dimensions']['window_y_pos'])
+                self.move(screen.width() - x, screen.height() - y)
+                
+    #Settings config loading functions
+    def __load_interval_values_conf(self):
+        if 'Parameters' in self.__config:
+            if 'seconds' in self.__config['Parameters']:
+                self.__seconds_line.setText(self.__config['Parameters']['seconds'])
+            if 'minutes' in self.__config['Parameters']:
+                self.__minutes_line.setText(self.__config['Parameters']['minutes'])
+            if 'hours' in self.__config['Parameters']:
+                self.__hours_line.setText(self.__config['Parameters']['hours'])
+            if 'days' in self.__config['Parameters']:
+                self.__days_line.setText(self.__config['Parameters']['days'])
+    
+    def __load_schedule_values_conf(self):
+        if 'Parameters' in self.__config:
+            if 'date' in self.__config['Parameters']:
+                date = self.__config['Parameters']['date'].split(',')
+                date_time = QtCore.QDateTime(int(date[0]), int(date[1]), int(date[2]), int(date[3]), int(date[4]), int(date[5]))
+                self.__date_time.setDateTime(date_time)
+    
+    #Twitter post loading functions
+    def __load_twitter_area_conf(self):
+        if 'Twitter area' in self.__config:
+            if 'content' in self.__config['Twitter area']:
+                self.__tweet_text.setPlainText(self.__config['Twitter area']['content'])
 
     # UI creation
     def initUI(self):
@@ -173,6 +268,7 @@ class MainWindow(QMainWindow):
         
     def closeEvent(self, event):
         if self.__show_exit_prompt() == QMessageBox.Yes:
+            self.__save_config(DEFAULT_WINDOW_CONFIG_FILE)
             event.accept()
         else:
             event.ignore()
@@ -184,13 +280,11 @@ class MainWindow(QMainWindow):
     def __show_exit_prompt(self):
         quit_msg = "Are you sure you want to exit the program?"
         reply = QMessageBox.question(self, 'Message', 
-                        quit_msg, QMessageBox.Yes, QMessageBox.No, QMessageBox.Yes)
+                        quit_msg, QMessageBox.Yes, QMessageBox.No)
         
         return reply
 
     def __create_main_window(self):
-        self.setGeometry(0, 0, 1080, 720)
-        self.setWindowTitle("School finder")
         self.__create_dock()
         self.__create_tweet_area()
         self.__create_central_widget()

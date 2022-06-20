@@ -5,7 +5,6 @@ from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import pyqtSignal, QObject
 
 from twitter_management.authorization import InvalidPinException, authenticator
-from helpers.logger import log_err
 from window import get_main_window
 
 ICONS_PATH = "res/icons/"
