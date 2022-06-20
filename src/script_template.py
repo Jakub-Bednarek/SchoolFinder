@@ -18,7 +18,6 @@ def create_dir_if_not_existing():
 def save_to_file():
     values = perform_script()
     filename = os.path.basename(__file__)[:-3]
-    print(filename)
     create_dir_if_not_existing()
 
     with open(f"{PATH_PREFIX}{filename}.txt", "w") as file:

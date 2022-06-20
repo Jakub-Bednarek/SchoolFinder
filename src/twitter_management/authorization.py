@@ -2,7 +2,7 @@ import dotenv
 import os
 
 from requests_oauthlib import OAuth1Session
-from helpers.logger import log_err, log_wrn
+from helpers.logger import log_err, log_inf
 
 REQUEST_TOKEN_URL = "https://api.twitter.com/oauth/request_token?oauth_callback=oob&x_auth_access_type=write"
 BASE_AUTHORIZATION_URL = "https://api.twitter.com/oauth/authorize"
@@ -66,8 +66,8 @@ class Authenticator:
         self.__access_token = oauth_tokens["oauth_token"]
         self.__access_secret = oauth_tokens["oauth_token_secret"]
 
-        print(self.__access_token)
-        print(self.__access_secret)
+        log_inf(self.__access_token)
+        log_inf(self.__access_secret)
 
 
 authenticator = Authenticator()

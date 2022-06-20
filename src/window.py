@@ -1,6 +1,7 @@
 import configparser
 import time
 import os
+import pyperclip
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (
@@ -19,6 +20,8 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QErrorMessage,
     QMessageBox,
+    qApp,
+    QAction
 )
 from PyQt5.QtGui import QIcon
 
@@ -34,7 +37,7 @@ from twitter_management.post_tweet import (
 
 SCRIPT_PATH_PREFIX = "script_outputs"
 DEFAULT_WINDOW_CONFIG_FILE = "conf/window.ini"
-
+DEFAULT_TEMPLATE_SCRIPT_PATH = 'src/script_template.py'
 
 class InvalidSettingException(Exception):
     pass
@@ -165,6 +168,23 @@ class MainWindow(QMainWindow):
         self.__create_main_window()
 
         log_inf("Successfully inititalized UI")
+        
+    def closeEvent(self, event):
+        if self.__show_exit_prompt() == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+            
+    def __exit(self):
+        if self.__show_exit_prompt() == QMessageBox.Yes:
+            qApp.exit()
+            
+    def __show_exit_prompt(self):
+        quit_msg = "Are you sure you want to exit the program?"
+        reply = QMessageBox.question(self, 'Message', 
+                        quit_msg, QMessageBox.Yes, QMessageBox.No, QMessageBox.Yes)
+        
+        return reply
 
     def __create_main_window(self):
         self.setGeometry(0, 0, 1080, 720)
@@ -172,6 +192,7 @@ class MainWindow(QMainWindow):
         self.__create_dock()
         self.__create_tweet_area()
         self.__create_central_widget()
+        self.__create_menu()
 
         self.setCentralWidget(self.__central_widget)
 
@@ -183,6 +204,86 @@ class MainWindow(QMainWindow):
         central_widget_layout.addWidget(self.__dock, 0, 2)
 
         self.__central_widget.setLayout(central_widget_layout)
+        
+    def __create_menu(self):
+        self.__create_file_menu()
+        self.__create_help_menu()
+        
+    def __create_file_menu(self):
+        exit_act = QAction('Exit', self)
+        exit_act.setShortcut('Ctrl+Q')
+        exit_act.setStatusTip('Exit application')
+        exit_act.triggered.connect(self.__exit)
+        
+        load_tweet_act = QAction('Load tweet', self)
+        load_tweet_act.setShortcut('Ctrl+L')
+        load_tweet_act.setStatusTip('Load your tweet from .txt file!')
+        load_tweet_act.triggered.connect(self.__load_tweet)
+        
+        save_tweet_act = QAction('Save tweet', self)
+        save_tweet_act.setShortcut('Ctrl+S')
+        save_tweet_act.setStatusTip('Save your tweet to file!')
+        save_tweet_act.triggered.connect(self.__save_tweet)
+        
+        file_menu = self.menuBar().addMenu('File')
+        file_menu.addAction(exit_act)
+        file_menu.addAction(load_tweet_act)
+        file_menu.addAction(save_tweet_act)
+        file_menu.setMinimumWidth(200)
+        
+    def __create_help_menu(self):
+        interval_act = QAction('Intervals', self)
+        interval_act.setStatusTip('Help about intervals section')
+        interval_act.triggered.connect(self.__show_intervals_help)
+        
+        date_act = QAction('Schedule', self)
+        date_act.setStatusTip('Help about schedule section')
+        date_act.triggered.connect(self.__show_schedule_help)
+        
+        scripts_act = QAction('Scripts', self)
+        scripts_act.setStatusTip('Help about scripts section')
+        scripts_act.triggered.connect(self.__show_scripts_help)
+        
+        help_menu = self.menuBar().addMenu('Help')
+        help_menu.addAction(interval_act)
+        help_menu.addAction(date_act)
+        help_menu.addAction(scripts_act)
+        help_menu.setMinimumWidth(200)
+        
+    def __show_intervals_help(self):
+        msg = """Intervals consists of 4 main areas, each specifying the time to post new Tweet\n
+Example of filled areas: Seconds 20 Days 4 \n   This means, bot will post new Tweet every day which is divisble by 4 and second divisble by 20\n
+Notice that both requirements must be fullfiled!\n\nPossible values:\n   Seconds: 0-59\n   Minutes: 0-59\n   Hours: 0-23\n   Days: 1-365"""
+        QMessageBox.information(self, 'Intervals help', msg)
+        
+    def __show_schedule_help(self):
+        msg = """Schedule consists of 1 area which is date-time.\nMain purpose is to schedule time of posting Tweet to never miss perfect time.\n
+To use simply check box on the left and insert date.\n
+Warning - date can't be in the past!"""
+        QMessageBox.information(self, 'Schedule help', msg)
+        
+    def __show_scripts_help(self):
+        msg = """Scripts area is definetly the most interesting one!\nTo start creating variables dependent on script, simply click 'Save' button below and paste it's content to python file.\n
+Inside the file there's instruction how to write your own script.\nWhen you're ready it's time to use it in the bot!\n\nFirst - import the script by pressing 'Add new script' button.
+Next, name your variable in the area to the left, it can be whatever you want!\n\nLast step is to use it in actual Tweet:\nFind a place where you want to put your variable.
+Then simply write it's name inside curly braces {}, it's that simple!\nFor example if you choose to name your variable 'cat', then inside your Tweet insert {cat}.\n
+If you're not sure if everything works, simply click 'Check' button, in case of errors, help will be provided."""
+        reply = QMessageBox.information(self, 'Intervals help', msg, QMessageBox.Ok, QMessageBox.Save)
+        
+        if reply == QMessageBox.Save:
+            content = self.__load_script_template()
+            if content is not None:
+                pyperclip.copy(content)
+                spam = pyperclip.paste()
+            
+    def __load_script_template(self):
+        try:
+            with open(DEFAULT_TEMPLATE_SCRIPT_PATH, 'r') as file:
+                return file.read()
+        except Exception as e:
+            self.__show_error_dialog("Failed to copy content, make sure that script_template.py file is not deleted!")
+            return None
+            
 
     def __create_dock(self):
         self.__dock = QWidget()
@@ -274,7 +375,7 @@ class MainWindow(QMainWindow):
         schedule_label.setFont(QtGui.QFont("Open sans", weight=QtGui.QFont.Bold))
         schedule_switch = QCheckBox("Date")
         schedule_switch.stateChanged.connect(self.__change_date_time_state)
-        self.__date_time = QDateTimeEdit()
+        self.__date_time = QDateTimeEdit(QtCore.QDateTime.currentDateTime())
         self.__date_time.setEnabled(False)
 
         layout = QGridLayout()
@@ -298,12 +399,12 @@ class MainWindow(QMainWindow):
         add_script_button = QPushButton("Add new script")
         add_script_button.clicked.connect(self.__add_new_script)
 
-        self.__scripts_layout.addWidget(scripts_label, alignment=QtCore.Qt.AlignLeft)
+        self.__scripts_layout.addWidget(scripts_label)
         self.__scripts_layout.addWidget(
             self.__scripts_widget, alignment=QtCore.Qt.AlignLeft
         )
         self.__scripts_layout.addWidget(
-            add_script_button, alignment=QtCore.Qt.AlignLeft
+            add_script_button
         )
 
         widget.setLayout(self.__scripts_layout)
@@ -407,6 +508,31 @@ class MainWindow(QMainWindow):
             return None
 
         return content
+    
+    def __load_tweet(self):
+        filename, _ = QFileDialog.getOpenFileName(
+            self, "Choose file to load", "", "All Files (*.*)"
+        )
+        
+        try:
+            with open(filename, 'r') as file:
+                self.__tweet_text.setPlainText(file.read())
+            self.__show_info_dialog(f"Successfully loaded {filename}!")
+        except Exception as e:
+            self.__show_error_dialog(str(e))
+            
+    def __save_tweet(self):
+        filename, _ = QFileDialog.getSaveFileName(
+            self, "Choose file to save", "", "All Files (*.*)"
+        )
+        
+        try:
+            with open(filename, 'w') as file:
+                file.write(self.__tweet_text.toPlainText())
+            self.__show_info_dialog(f"Successfully saved {filename}!")
+        except Exception as e:
+            self.__show_error_dialog(str(e))
+        
 
     def __gather_settings(self):
         settings = self.Settings()
@@ -520,7 +646,6 @@ class MainWindow(QMainWindow):
             var = self.__check_var_value(text_area)
             script_val = self.__load_script_value_from_file(script)
 
-            print(f"VAR: |{var}| len: {len(var)}")
             if len(var) > 0 and script_val:
                 return (var, script_val)
             else:

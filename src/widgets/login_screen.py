@@ -51,7 +51,6 @@ class LoginScreen(QWidget):
     def setup_window(self):
         width = int(self.__screen_width / 5)
         height = int(self.__screen_height / 5)
-        print(f"Width: {width}, Height: {height}")
         self.resize(width, height)
 
     def go_to_authorization_page(self):
