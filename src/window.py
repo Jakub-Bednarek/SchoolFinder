@@ -1,5 +1,6 @@
 import configparser
 import time
+import os
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
@@ -21,6 +22,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QIcon
 
+from script_runner import run_script
 from helpers.logger import log_inf, log_err
 from widgets.collapsible_box import CollapsibleBox
 from twitter_management.post_tweet import (
@@ -29,6 +31,7 @@ from twitter_management.post_tweet import (
     check_return_code,
 )
 
+SCRIPT_PATH_PREFIX = "script_outputs"
 DEFAULT_WINDOW_CONFIG_FILE = "conf/window.ini"
 
 
@@ -234,6 +237,7 @@ class MainWindow(QMainWindow):
         self.__scripts_layout = QVBoxLayout()
         self.__scripts_widget = QWidget()
         self.__scripts_widget_layout = QVBoxLayout()
+        self.__paths_list = []
         add_script_button = QPushButton("Add new script")
         add_script_button.clicked.connect(self.__add_new_script)
 
@@ -265,7 +269,9 @@ class MainWindow(QMainWindow):
         )
         if file:
             sender = self.sender()
-            sender.setText(file)
+            sender.setText(os.path.basename(file))
+            self.__paths_list.append(file)
+            run_script(file)
 
     def __change_seconds_state(self):
         self.__seconds_line.setEnabled(not self.__seconds_line.isEnabled())
@@ -284,6 +290,7 @@ class MainWindow(QMainWindow):
 
     # tweet posting
     def __post_tweet(self):
+        self.__convert_scripts()
         self.__settings = self.__gather_settings()
 
         if self.__settings.is_scheduled or self.__settings.is_interval:
@@ -373,7 +380,23 @@ class MainWindow(QMainWindow):
             log_err(e)
 
     def __convert_scripts(self):
-        pass
+        scripts_output_values = []
+        for script in self.__paths_list:
+            try:
+                run_script(script)
+                scripts_output_values.append(self.__load_script_value_from_file(script))
+            except Exception as e:
+                log_err(f"Unexpected error occured: {e}")
+                
+    def __load_script_value_from_file(self, path):
+        filename = os.path.basename(path)[:-3]
+        filename = f"{SCRIPT_PATH_PREFIX}/{filename}.txt"
+        
+        with open(filename, "r") as file:
+            content = file.read()
+            print(content)
+            return content
+        
 
 
 main_window = None
