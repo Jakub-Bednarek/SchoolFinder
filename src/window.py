@@ -19,9 +19,12 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QFileDialog,
+    QErrorMessage,
+    QMessageBox
 )
 from PyQt5.QtGui import QIcon
 
+from twitter_management.tweet_parsers import parse_tweet
 from script_runner import run_script
 from helpers.logger import log_inf, log_err
 from widgets.collapsible_box import CollapsibleBox
@@ -93,6 +96,7 @@ class MainWindow(QMainWindow):
         self.resize(800, 500)
         self.__timer = None
         self.__settings = self.Settings()
+        self.has_script = False
 
         log_inf("Successfully MainWindow")
 
@@ -238,6 +242,7 @@ class MainWindow(QMainWindow):
         self.__scripts_widget = QWidget()
         self.__scripts_widget_layout = QVBoxLayout()
         self.__paths_list = []
+        self.__scripts_val_list = []
         add_script_button = QPushButton("Add new script")
         add_script_button.clicked.connect(self.__add_new_script)
 
@@ -253,13 +258,17 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout()
         label = QLabel("Name")
         text_area = QLineEdit()
-        button = QPushButton()
+        
+        self.__scripts_val_list.append(text_area)
+        button = QPushButton("Add new script")
         button.clicked.connect(self.__choose_script_path)
 
         layout.addWidget(label)
         layout.addWidget(text_area)
         layout.addWidget(button)
         widget.setLayout(layout)
+        
+        self.has_script = True
 
         self.__scripts_widget_layout.addWidget(widget)
 
@@ -290,23 +299,34 @@ class MainWindow(QMainWindow):
 
     # tweet posting
     def __post_tweet(self):
-        self.__convert_scripts()
         self.__settings = self.__gather_settings()
-
         if self.__settings.is_scheduled or self.__settings.is_interval:
             self.__start_timer()
         else:
             self.__post_single_tweet()
 
     def __post_single_tweet(self):
-        content = {"text": self.__tweet_text.toPlainText()}
-        return_code = post(content)
-        print("Single")
+        content = self.__tweet_text.toPlainText()
+        if self.has_script:
+            var_script_pair = self.__convert_scripts()
+            if not var_script_pair:
+                return
+            
+            content = self.__handle_tweet_vals_replacement(content, var_script_pair)
+            if not content:
+                return
+        if not content:
+            self.__show_error_dialog("Tweet area is empty!")
+            return
+        
+        return_code = post({"text": content})
 
         try:
             check_return_code(return_code)
+            self.__show_info_dialog("Your tweet has been posted successfully!")
             log_inf(f"Posted successfully")
         except TweetNotPostedException as e:
+            self.__show_error_dialog("There was a problem with posting your tweet! Check if content is not same as last tweet!")
             log_err(e)
 
     def __gather_settings(self):
@@ -323,7 +343,6 @@ class MainWindow(QMainWindow):
         if self.__date_time.isEnabled():
             settings.add_date_time(self.__date_time.dateTime())
 
-        print(str(settings))
         return settings
 
     def __check_interval_tweet(self):
@@ -378,24 +397,65 @@ class MainWindow(QMainWindow):
             return int(val)
         except ValueError as e:
             log_err(e)
+            
+    def __show_error_dialog(self, text):
+        error_dialog = QErrorMessage()
+        error_dialog.showMessage(text)
+        error_dialog.exec_()
+        
+    def __show_info_dialog(self, text):
+        dialog = QMessageBox.information(self, "Info!", text)
 
     def __convert_scripts(self):
-        scripts_output_values = []
-        for script in self.__paths_list:
+        scripts_val_dict = {}
+        i = 0
+        for i in range(0, len(self.__scripts_val_list)):
             try:
+                script = self.__paths_list[i]
+                var = self.__scripts_val_list[i]
                 run_script(script)
-                scripts_output_values.append(self.__load_script_value_from_file(script))
-            except Exception as e:
-                log_err(f"Unexpected error occured: {e}")
+                var_script_pair = self.__build_var_script_pair(var, script)
+                if var_script_pair:
+                    scripts_val_dict[var_script_pair[0]] = var_script_pair[1]
+            except:
+                self.__show_error_dialog("Error: one of areas is not filled correctly, can't submit!")
+                return None
+            
+        return scripts_val_dict
                 
     def __load_script_value_from_file(self, path):
         filename = os.path.basename(path)[:-3]
         filename = f"{SCRIPT_PATH_PREFIX}/{filename}.txt"
         
         with open(filename, "r") as file:
-            content = file.read()
-            print(content)
-            return content
+            return file.read()
+        
+    def __build_var_script_pair(self, text_area, script):
+        try:
+            var = self.__check_var_value(text_area)
+            script_val = self.__load_script_value_from_file(script)
+            
+            print(f"VAR: |{var}| len: {len(var)}")
+            if len(var) > 0 and script_val:
+                return (var, script_val)
+            else:
+                self.__show_error_dialog(f"Script or var areas are not filled!")
+        except Exception as e:
+            self.__show_error_dialog(f"Failed to load var name or script, error: {e}")
+            return None
+                
+        
+    def __check_var_value(self, text_area):
+        return text_area.text() if not None else None
+    
+    def __handle_tweet_vals_replacement(self, content, var_script_dict):
+        replaced_content, missing_vals = parse_tweet(content, var_script_dict)
+        if missing_vals:
+            self.__show_error_dialog(f"Atleast one of the script variables didn't match in tweet content: {missing_vals}")
+            return None
+        
+        return replaced_content
+    
         
 
 
