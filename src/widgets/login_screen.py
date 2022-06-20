@@ -1,6 +1,13 @@
 from webbrowser import open
 
-from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QLabel, QLineEdit, QErrorMessage
+from PyQt5.QtWidgets import (
+    QWidget,
+    QGridLayout,
+    QPushButton,
+    QLabel,
+    QLineEdit,
+    QErrorMessage,
+)
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import pyqtSignal, QObject
 
@@ -26,11 +33,13 @@ class LoginScreen(QWidget):
         self.communicate = Communicate()
 
         layout = QGridLayout()
-        
+
         first_step_label = QLabel()
-        first_step_label.setText("<font color=#2798f5>1. Go to authorization page.</font>")
+        first_step_label.setText(
+            "<font color=#2798f5>1. Go to authorization page.</font>"
+        )
         first_step_label.setFont(QFont("Open sans", 45, weight=QFont.Bold))
-        
+
         open_web_button = QPushButton(self)
         open_web_button.setText("Authorization page")
         open_web_button.setIcon(QIcon(f"{ICONS_PATH}/twitter_logo.png"))
@@ -44,11 +53,13 @@ class LoginScreen(QWidget):
         submit_button = QPushButton(self)
         submit_button.setText("SUBMIT")
         submit_button.clicked.connect(self.submit_pin)
-        
+
         second_step_label = QLabel()
-        second_step_label.setText("<font color=#2798f5>2. Paste pin below and submit!</font>")
+        second_step_label.setText(
+            "<font color=#2798f5>2. Paste pin below and submit!</font>"
+        )
         second_step_label.setFont(QFont("Open sans", 45, weight=QFont.Bold))
-        
+
         layout.addWidget(first_step_label, 0, 0)
         layout.addWidget(open_web_button, 1, 0)
         layout.addWidget(QLabel(), 2, 0)

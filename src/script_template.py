@@ -3,13 +3,13 @@ import os
 
 PATH_PREFIX = "script_outputs/"
 
-#This is function that returns value passed to our program, write your code inside and don't forget about return
+# This is function that returns value passed to our program, write your code inside and don't forget about return
 def perform_script():
     # YOUR CODE GOES HERE
     return "Test"
 
 
-#Don't touch this part of code as it may break functionality
+# Don't touch this part of code as it may break functionality
 def create_dir_if_not_existing():
     p = pathlib.Path(PATH_PREFIX)
     if not p.exists():

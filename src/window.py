@@ -37,7 +37,8 @@ from twitter_management.post_tweet import (
 
 SCRIPT_PATH_PREFIX = "script_outputs"
 DEFAULT_WINDOW_CONFIG_FILE = "conf/window.ini"
-DEFAULT_TEMPLATE_SCRIPT_PATH = 'src/script_template.py'
+DEFAULT_TEMPLATE_SCRIPT_PATH = "src/script_template.py"
+
 
 class InvalidSettingException(Exception):
     pass
@@ -136,15 +137,15 @@ class MainWindow(QMainWindow):
         log_inf(f"Loading config file {file_name}")
         self.__config = configparser.ConfigParser()
         self.__config.read(DEFAULT_WINDOW_CONFIG_FILE)
-        
+
         try:
             self.__load_window_title_conf()
             self.__load_window_size_conf()
             self.__load_window_pos_conf()
-            
+
             self.__load_interval_values_conf()
             self.__load_schedule_values_conf()
-            
+
             self.__load_twitter_area_conf()
             log_inf(f"Loaded config file {file_name}")
         except Exception as e:
@@ -156,107 +157,119 @@ class MainWindow(QMainWindow):
 
         config["Default"] = {}
         config["Default"]["window_name"] = self.windowTitle()
-        
+
         config = self.__save_window_values(config)
         config = self.__save_parameters_values(config)
         config = self.__save_twitter_area(config)
-        
+
         try:
-            with open(file_name, 'w') as configfile:
+            with open(file_name, "w") as configfile:
                 config.write(configfile)
             log_inf(f"Saved config file {file_name}")
         except Exception as e:
             log_err(f"Failed to save config file {file_name}, error: {e}")
-            
+
     def __save_window_values(self, config):
         config["Dimensions"] = {}
         config["Dimensions"]["window_width"] = str(self.size().width())
         config["Dimensions"]["window_height"] = str(self.size().height())
         config["Dimensions"]["window_x_pos"] = str(self.pos().x())
         config["Dimensions"]["window_y_pos"] = str(self.pos().y())
-        
+
         return config
-            
+
     def __save_parameters_values(self, config):
         config["Parameters"] = {}
         settings = self.__gather_settings()
-    
+
         if not settings:
             log_err("Failed to save parameters settings")
             return
-        
+
         if settings.seconds:
-            config['Parameters']['seconds'] = str(settings.seconds)
+            config["Parameters"]["seconds"] = str(settings.seconds)
         else:
-            config['Parameters']['seconds'] = "0"
+            config["Parameters"]["seconds"] = "0"
         if settings.minutes:
-            config['Parameters']['minutes'] = str(settings.minutes)
+            config["Parameters"]["minutes"] = str(settings.minutes)
         else:
-            config['Parameters']['minutes'] = "0"
+            config["Parameters"]["minutes"] = "0"
         if settings.hours:
-            config['Parameters']['hours'] = str(settings.hours)
+            config["Parameters"]["hours"] = str(settings.hours)
         else:
-            config['Parameters']['hours'] = "0"
+            config["Parameters"]["hours"] = "0"
         if settings.days:
-            config['Parameters']['days'] = str(settings.days)
+            config["Parameters"]["days"] = str(settings.days)
         else:
-            config['Parameters']['days'] = "0"
+            config["Parameters"]["days"] = "0"
         if settings.date_time:
-            config['Parameters']['date'] = str(settings.date_time.toString('yyyy,M,d,h,m,s'))
-        
+            config["Parameters"]["date"] = str(
+                settings.date_time.toString("yyyy,M,d,h,m,s")
+            )
+
         return config
-    
+
     def __save_twitter_area(self, config):
-        config['Twitter area'] = {}
-        config['Twitter area']['content'] = self.__tweet_text.toPlainText()
-        
+        config["Twitter area"] = {}
+        config["Twitter area"]["content"] = self.__tweet_text.toPlainText()
+
         return config
-     
-    #Window config loading functions
+
+    # Window config loading functions
     def __load_window_title_conf(self):
-        if 'Default' in self.__config:
-            if 'window_name' in self.__config['Default']:
-                self.setWindowTitle(self.__config['Default']['window_name'])
-                
+        if "Default" in self.__config:
+            if "window_name" in self.__config["Default"]:
+                self.setWindowTitle(self.__config["Default"]["window_name"])
+
     def __load_window_size_conf(self):
-        if 'Dimensions' in self.__config:
-            if 'window_width' in self.__config['Dimensions']:
-                self.setFixedWidth(int(self.__config['Dimensions']['window_width']))
-            if 'window_height' in self.__config['Dimensions']:
-                self.setFixedHeight(int(self.__config['Dimensions']['window_height']))
-                
+        if "Dimensions" in self.__config:
+            if "window_width" in self.__config["Dimensions"]:
+                self.setFixedWidth(int(self.__config["Dimensions"]["window_width"]))
+            if "window_height" in self.__config["Dimensions"]:
+                self.setFixedHeight(int(self.__config["Dimensions"]["window_height"]))
+
     def __load_window_pos_conf(self):
         screen = QDesktopWidget().screenGeometry()
-        if 'Dimensions' in self.__config:
-            if 'window_x_pos' in self.__config['Dimensions'] and 'window_y_pos' in self.__config['Dimensions']:
-                x = int(self.__config['Dimensions']['window_x_pos'])
-                y = int(self.__config['Dimensions']['window_y_pos'])
+        if "Dimensions" in self.__config:
+            if (
+                "window_x_pos" in self.__config["Dimensions"]
+                and "window_y_pos" in self.__config["Dimensions"]
+            ):
+                x = int(self.__config["Dimensions"]["window_x_pos"])
+                y = int(self.__config["Dimensions"]["window_y_pos"])
                 self.move(screen.width() - x, screen.height() - y)
-                
-    #Settings config loading functions
+
+    # Settings config loading functions
     def __load_interval_values_conf(self):
-        if 'Parameters' in self.__config:
-            if 'seconds' in self.__config['Parameters']:
-                self.__seconds_line.setText(self.__config['Parameters']['seconds'])
-            if 'minutes' in self.__config['Parameters']:
-                self.__minutes_line.setText(self.__config['Parameters']['minutes'])
-            if 'hours' in self.__config['Parameters']:
-                self.__hours_line.setText(self.__config['Parameters']['hours'])
-            if 'days' in self.__config['Parameters']:
-                self.__days_line.setText(self.__config['Parameters']['days'])
-    
+        if "Parameters" in self.__config:
+            if "seconds" in self.__config["Parameters"]:
+                self.__seconds_line.setText(self.__config["Parameters"]["seconds"])
+            if "minutes" in self.__config["Parameters"]:
+                self.__minutes_line.setText(self.__config["Parameters"]["minutes"])
+            if "hours" in self.__config["Parameters"]:
+                self.__hours_line.setText(self.__config["Parameters"]["hours"])
+            if "days" in self.__config["Parameters"]:
+                self.__days_line.setText(self.__config["Parameters"]["days"])
+
     def __load_schedule_values_conf(self):
-        if 'Parameters' in self.__config:
-            if 'date' in self.__config['Parameters']:
-                date = self.__config['Parameters']['date'].split(',')
-                date_time = QtCore.QDateTime(int(date[0]), int(date[1]), int(date[2]), int(date[3]), int(date[4]), int(date[5]))
+        if "Parameters" in self.__config:
+            if "date" in self.__config["Parameters"]:
+                date = self.__config["Parameters"]["date"].split(",")
+                date_time = QtCore.QDateTime(
+                    int(date[0]),
+                    int(date[1]),
+                    int(date[2]),
+                    int(date[3]),
+                    int(date[4]),
+                    int(date[5]),
+                )
                 self.__date_time.setDateTime(date_time)
-    
-    #Twitter post loading functions
+
+    # Twitter post loading functions
     def __load_twitter_area_conf(self):
-        if 'Twitter area' in self.__config:
-            if 'content' in self.__config['Twitter area']:
-                self.__tweet_text.setPlainText(self.__config['Twitter area']['content'])
+        if "Twitter area" in self.__config:
+            if "content" in self.__config["Twitter area"]:
+                self.__tweet_text.setPlainText(self.__config["Twitter area"]["content"])
 
     # UI creation
     def initUI(self):
@@ -265,23 +278,24 @@ class MainWindow(QMainWindow):
         self.__create_main_window()
 
         log_inf("Successfully inititalized UI")
-        
+
     def closeEvent(self, event):
         if self.__show_exit_prompt() == QMessageBox.Yes:
             self.__save_config(DEFAULT_WINDOW_CONFIG_FILE)
             event.accept()
         else:
             event.ignore()
-            
+
     def __exit(self):
         if self.__show_exit_prompt() == QMessageBox.Yes:
             qApp.exit()
-            
+
     def __show_exit_prompt(self):
         quit_msg = "Are you sure you want to exit the program?"
-        reply = QMessageBox.question(self, 'Message', 
-                        quit_msg, QMessageBox.Yes, QMessageBox.No)
-        
+        reply = QMessageBox.question(
+            self, "Message", quit_msg, QMessageBox.Yes, QMessageBox.No
+        )
+
         return reply
 
     def __create_main_window(self):
@@ -300,86 +314,89 @@ class MainWindow(QMainWindow):
         central_widget_layout.addWidget(self.__dock, 0, 2)
 
         self.__central_widget.setLayout(central_widget_layout)
-        
+
     def __create_menu(self):
         self.__create_file_menu()
         self.__create_help_menu()
-        
+
     def __create_file_menu(self):
-        exit_act = QAction('Exit', self)
-        exit_act.setShortcut('Ctrl+Q')
-        exit_act.setStatusTip('Exit application')
+        exit_act = QAction("Exit", self)
+        exit_act.setShortcut("Ctrl+Q")
+        exit_act.setStatusTip("Exit application")
         exit_act.triggered.connect(self.__exit)
-        
-        load_tweet_act = QAction('Load tweet', self)
-        load_tweet_act.setShortcut('Ctrl+L')
-        load_tweet_act.setStatusTip('Load your tweet from .txt file!')
+
+        load_tweet_act = QAction("Load tweet", self)
+        load_tweet_act.setShortcut("Ctrl+L")
+        load_tweet_act.setStatusTip("Load your tweet from .txt file!")
         load_tweet_act.triggered.connect(self.__load_tweet)
-        
-        save_tweet_act = QAction('Save tweet', self)
-        save_tweet_act.setShortcut('Ctrl+S')
-        save_tweet_act.setStatusTip('Save your tweet to file!')
+
+        save_tweet_act = QAction("Save tweet", self)
+        save_tweet_act.setShortcut("Ctrl+S")
+        save_tweet_act.setStatusTip("Save your tweet to file!")
         save_tweet_act.triggered.connect(self.__save_tweet)
-        
-        file_menu = self.menuBar().addMenu('File')
+
+        file_menu = self.menuBar().addMenu("File")
         file_menu.addAction(exit_act)
         file_menu.addAction(load_tweet_act)
         file_menu.addAction(save_tweet_act)
         file_menu.setMinimumWidth(200)
-        
+
     def __create_help_menu(self):
-        interval_act = QAction('Intervals', self)
-        interval_act.setStatusTip('Help about intervals section')
+        interval_act = QAction("Intervals", self)
+        interval_act.setStatusTip("Help about intervals section")
         interval_act.triggered.connect(self.__show_intervals_help)
-        
-        date_act = QAction('Schedule', self)
-        date_act.setStatusTip('Help about schedule section')
+
+        date_act = QAction("Schedule", self)
+        date_act.setStatusTip("Help about schedule section")
         date_act.triggered.connect(self.__show_schedule_help)
-        
-        scripts_act = QAction('Scripts', self)
-        scripts_act.setStatusTip('Help about scripts section')
+
+        scripts_act = QAction("Scripts", self)
+        scripts_act.setStatusTip("Help about scripts section")
         scripts_act.triggered.connect(self.__show_scripts_help)
-        
-        help_menu = self.menuBar().addMenu('Help')
+
+        help_menu = self.menuBar().addMenu("Help")
         help_menu.addAction(interval_act)
         help_menu.addAction(date_act)
         help_menu.addAction(scripts_act)
         help_menu.setMinimumWidth(200)
-        
+
     def __show_intervals_help(self):
         msg = """Intervals consists of 4 main areas, each specifying the time to post new Tweet\n
 Example of filled areas: Seconds 20 Days 4 \n   This means, bot will post new Tweet every day which is divisble by 4 and second divisble by 20\n
 Notice that both requirements must be fullfiled!\n\nPossible values:\n   Seconds: 0-59\n   Minutes: 0-59\n   Hours: 0-23\n   Days: 1-365"""
-        QMessageBox.information(self, 'Intervals help', msg)
-        
+        QMessageBox.information(self, "Intervals help", msg)
+
     def __show_schedule_help(self):
         msg = """Schedule consists of 1 area which is date-time.\nMain purpose is to schedule time of posting Tweet to never miss perfect time.\n
 To use simply check box on the left and insert date.\n
 Warning - date can't be in the past!"""
-        QMessageBox.information(self, 'Schedule help', msg)
-        
+        QMessageBox.information(self, "Schedule help", msg)
+
     def __show_scripts_help(self):
         msg = """Scripts area is definetly the most interesting one!\nTo start creating variables dependent on script, simply click 'Save' button below and paste it's content to python file.\n
 Inside the file there's instruction how to write your own script.\nWhen you're ready it's time to use it in the bot!\n\nFirst - import the script by pressing 'Add new script' button.
 Next, name your variable in the area to the left, it can be whatever you want!\n\nLast step is to use it in actual Tweet:\nFind a place where you want to put your variable.
 Then simply write it's name inside curly braces {}, it's that simple!\nFor example if you choose to name your variable 'cat', then inside your Tweet insert {cat}.\n
 If you're not sure if everything works, simply click 'Check' button, in case of errors, help will be provided."""
-        reply = QMessageBox.information(self, 'Intervals help', msg, QMessageBox.Ok, QMessageBox.Save)
-        
+        reply = QMessageBox.information(
+            self, "Intervals help", msg, QMessageBox.Ok, QMessageBox.Save
+        )
+
         if reply == QMessageBox.Save:
             content = self.__load_script_template()
             if content is not None:
                 pyperclip.copy(content)
                 spam = pyperclip.paste()
-            
+
     def __load_script_template(self):
         try:
-            with open(DEFAULT_TEMPLATE_SCRIPT_PATH, 'r') as file:
+            with open(DEFAULT_TEMPLATE_SCRIPT_PATH, "r") as file:
                 return file.read()
         except Exception as e:
-            self.__show_error_dialog("Failed to copy content, make sure that script_template.py file is not deleted!")
+            self.__show_error_dialog(
+                "Failed to copy content, make sure that script_template.py file is not deleted!"
+            )
             return None
-            
 
     def __create_dock(self):
         self.__dock = QWidget()
@@ -499,9 +516,7 @@ If you're not sure if everything works, simply click 'Check' button, in case of 
         self.__scripts_layout.addWidget(
             self.__scripts_widget, alignment=QtCore.Qt.AlignLeft
         )
-        self.__scripts_layout.addWidget(
-            add_script_button
-        )
+        self.__scripts_layout.addWidget(add_script_button)
 
         widget.setLayout(self.__scripts_layout)
         self.__scripts_widget.setLayout(self.__scripts_widget_layout)
@@ -604,31 +619,30 @@ If you're not sure if everything works, simply click 'Check' button, in case of 
             return None
 
         return content
-    
+
     def __load_tweet(self):
         filename, _ = QFileDialog.getOpenFileName(
             self, "Choose file to load", "", "All Files (*.*)"
         )
-        
+
         try:
-            with open(filename, 'r') as file:
+            with open(filename, "r") as file:
                 self.__tweet_text.setPlainText(file.read())
             self.__show_info_dialog(f"Successfully loaded {filename}!")
         except Exception as e:
             self.__show_error_dialog(str(e))
-            
+
     def __save_tweet(self):
         filename, _ = QFileDialog.getSaveFileName(
             self, "Choose file to save", "", "All Files (*.*)"
         )
-        
+
         try:
-            with open(filename, 'w') as file:
+            with open(filename, "w") as file:
                 file.write(self.__tweet_text.toPlainText())
             self.__show_info_dialog(f"Successfully saved {filename}!")
         except Exception as e:
             self.__show_error_dialog(str(e))
-        
 
     def __gather_settings(self):
         settings = self.Settings()
