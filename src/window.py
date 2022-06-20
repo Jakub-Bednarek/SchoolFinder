@@ -28,7 +28,6 @@ from PyQt5.QtGui import QIcon
 from twitter_management.tweet_parsers import parse_tweet
 from script_runner import run_script
 from helpers.logger import log_inf, log_err
-from widgets.collapsible_box import CollapsibleBox
 from twitter_management.post_tweet import (
     TweetNotPostedException,
     post,
@@ -160,6 +159,9 @@ class MainWindow(QMainWindow):
             log_inf(f"Saved window conf file {file_name}")
         except:
             log_err(f"Failed to write config to file {file_name}")
+            
+    def __load_window_size(self):
+        pass
 
     # UI creation
     def initUI(self):

@@ -6,7 +6,7 @@ PATH_PREFIX = "script_outputs/"
 
 def perform_script():
     # YOUR CODE GOES HERE
-    return "my_string"
+    return "jebany"
 
 
 def create_dir_if_not_existing():

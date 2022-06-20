@@ -1,7 +1,7 @@
 from webbrowser import open
 
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QLineEdit
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QLabel, QLineEdit, QErrorMessage
+from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import pyqtSignal, QObject
 
 from twitter_management.authorization import InvalidPinException, authenticator
@@ -26,22 +26,37 @@ class LoginScreen(QWidget):
         self.setup_window()
         self.communicate = Communicate()
 
-        layout = QVBoxLayout()
+        layout = QGridLayout()
+        
+        first_step_label = QLabel()
+        first_step_label.setText("<font color=#2798f5>1. Go to authorization page.</font>")
+        first_step_label.setFont(QFont("Open sans", 45, weight=QFont.Bold))
+        
         open_web_button = QPushButton(self)
-        open_web_button.setText("Go to authorization page")
+        open_web_button.setText("Authorization page")
         open_web_button.setIcon(QIcon(f"{ICONS_PATH}/twitter_logo.png"))
         open_web_button.clicked.connect(self.go_to_authorization_page)
-        layout.addWidget(open_web_button)
 
         pin_label = QLabel("PIN")
+        pin_label.setText("<font color=#2798f5>PIN</font>")
+        pin_label.setFont(QFont("Open sans", weight=QFont.Bold))
         self.__pin_text_area = QLineEdit()
-        layout.addWidget(pin_label)
-        layout.addWidget(self.__pin_text_area)
 
         submit_button = QPushButton(self)
         submit_button.setText("SUBMIT")
         submit_button.clicked.connect(self.submit_pin)
-        layout.addWidget(submit_button)
+        
+        second_step_label = QLabel()
+        second_step_label.setText("<font color=#2798f5>2. Paste pin below and submit!</font>")
+        second_step_label.setFont(QFont("Open sans", 45, weight=QFont.Bold))
+        
+        layout.addWidget(first_step_label, 0, 0)
+        layout.addWidget(open_web_button, 1, 0)
+        layout.addWidget(QLabel(), 2, 0)
+        layout.addWidget(second_step_label, 3, 0)
+        layout.addWidget(self.__pin_text_area, 4, 0)
+        layout.addWidget(submit_button, 5, 0)
+        layout.setSpacing(10)
 
         self.setLayout(layout)
 
@@ -63,4 +78,6 @@ class LoginScreen(QWidget):
             self.hide()
             get_main_window().show()
         except InvalidPinException as e:
-            log_err(e)
+            msg = QErrorMessage()
+            msg.showMessage(str(e))
+            msg.exec_()
