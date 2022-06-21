@@ -344,6 +344,7 @@ class MainWindow(QMainWindow):
         log_inf("Initializing UI")
 
         self.__create_main_window()
+        self.setWindowIcon(QIcon('src/icons/twitter_logo.png'))
 
         log_inf("Successfully inititalized UI")
 
