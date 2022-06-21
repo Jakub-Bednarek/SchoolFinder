@@ -140,6 +140,8 @@ class MainWindow(QMainWindow):
             
             Returns:
                 str: Converted value for interval settings"""
+                
+            log_inf("Building intervals")
             out_str = []
             if self.seconds:
                 out_str.append(f"\n   Seconds: {self.seconds} ")
@@ -149,7 +151,7 @@ class MainWindow(QMainWindow):
                 out_str.append(f"\n   Hours: {self.hours} ")
             if self.days:
                 out_str.append(f"\n   Days: {self.days}")
-            
+            log_inf("Finished building intervals")
             return "".join(out_str)
 
         def __check_if_value_convertible(self, value):
@@ -953,6 +955,8 @@ If there's enough time, Im planning on rewriting app on C++ with server intergra
         
         Returns:
             dict | None: dictionary with paired variables and script or None in case of failure"""
+            
+        log_inf("Converting available scripts")
         scripts_val_dict = {}
         i = 0
         for i in range(0, len(self.__scripts_val_list)):
@@ -963,12 +967,14 @@ If there's enough time, Im planning on rewriting app on C++ with server intergra
                 var_script_pair = self.__build_var_script_pair(var, script)
                 if var_script_pair:
                     scripts_val_dict[var_script_pair[0]] = var_script_pair[1]
-            except:
+            except Exception as e:
                 self.__show_error_dialog(
                     "Error: one of areas is not filled correctly, can't submit!"
                 )
+                log_err(f"Failed to convert scripts, error: {e}")
                 return None
-
+            
+        log_inf("Converted all available scripts")
         return scripts_val_dict
 
     def __load_script_value_from_file(self, path):
@@ -994,6 +1000,7 @@ If there's enough time, Im planning on rewriting app on C++ with server intergra
             
         Returns:
             tuple(str, str) | None: tuple of variable name and value or None in case of failure"""
+            
         try:
             var = self.__check_var_value(text_area)
             script_val = self.__load_script_value_from_file(script)
