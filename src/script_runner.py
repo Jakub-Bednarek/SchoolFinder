@@ -17,7 +17,7 @@ def run_script_python3(path):
 
 def run_script_python(path):
     try:
-        subprocess.run(['python3', path])
+        subprocess.run(['python', path])
     except:
         return False
     

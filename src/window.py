@@ -251,7 +251,7 @@ class MainWindow(QMainWindow):
             ):
                 x = int(self.__config["Dimensions"]["window_x_pos"])
                 y = int(self.__config["Dimensions"]["window_y_pos"])
-                self.move(screen.width() - x, screen.height() - y)
+                self.move(x, y)
 
     # Settings config loading functions
     def __load_interval_values_conf(self):
