@@ -41,6 +41,11 @@ class Logger:
             return f"{color}{msg}{Logger.LOG_COLORS['RESET']}"
 
     def log_msg(self, msg: str, severity: int):
+        """Function logs message with corresponding severity
+        
+        Parameters:
+            msg(str): message to be logged
+            severity(str): level that will be set to log message"""
         self.__root_logger.log(severity, msg)
 
     def __init__(self, file_path: str = DEFAULT_LOG_FILE):
@@ -53,6 +58,10 @@ class Logger:
             )
 
     def create_paths(self, dest_path: str):
+        """Function creates path in file system based on given string
+        
+        Parameters:
+            dest_path(str): path to folder that will be created"""
         path = self.create_log_path_str(dest_path)
         if os.path.exists(path):
             return
@@ -60,6 +69,12 @@ class Logger:
             os.makedirs(path)
 
     def create_log_path_str(self, dest_path: str):
+        """Function creates log path string from provided destination path
+        
+        Parameters:
+            dest_path(str): path to be converted
+        Returns:
+            str: converted path"""
         tokens = dest_path.split("/")
 
         if len(tokens) <= 1:
@@ -72,6 +87,10 @@ class Logger:
         return path
 
     def __start(self, file_path: str):
+        """Function sets up logger and all it's variables
+        
+        Parameters:
+            file_path(str): path where logs will be saved"""
         self.create_paths(file_path)
 
         file_handle = logging.FileHandler(
@@ -91,16 +110,20 @@ logger = Logger()
 
 
 def log_inf(msg):
+    """Function logs message with severity: INFO"""
     logger.log_msg(msg, logging.INFO)
 
 
 def log_dbg(msg):
+    """Function logs message with severity: DEBUG"""
     logger.log_msg(msg, logging.DEBUG)
 
 
 def log_wrn(msg):
+    """Function logs message with severity: WARNING"""
     logger.log_msg(msg, logging.WARN)
 
 
 def log_err(msg):
+    """Function logs message with severity: ERROR"""
     logger.log_msg(msg, logging.ERROR)

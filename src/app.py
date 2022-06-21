@@ -23,10 +23,15 @@ class App:
         log_inf("Destroyed app")
 
     def run(self):
+        """Function starts application loop"""
         log_inf("Starting app")
         self.login.show()
 
         sys.exit(self.__app.exec_())
 
     def check_if_login_success(self):
+        """Function check if login was successful
+        
+        Returns:
+            Boolean: status of operation"""
         return self.login

@@ -26,10 +26,15 @@ class Authenticator:
         self.get_api_keys()
 
     def get_api_keys(self):
+        """"Function loads api key and secret from os"""
         self.__api_key = os.getenv("API_KEY")
         self.__api_secret = os.getenv("API_SECRET")
 
     def fetch_api_oauth_tokens(self):
+        """"Function fetches api keys from authorized session and returns whether operation was successful or not
+        
+        Returns:
+            Boolean: status of operation"""
         self.__oauth = OAuth1Session(self.__api_key, self.__api_secret)
         try:
             fetch_response = self.__oauth.fetch_request_token(REQUEST_TOKEN_URL)
@@ -42,15 +47,24 @@ class Authenticator:
         return True
 
     def get_authorization_url(self):
+        """"Function returns authorization url for oauth session"""
         return self.__oauth.authorization_url(BASE_AUTHORIZATION_URL)
 
     def get_access_token(self):
+        """"Function returns access token of session"""
         return self.__access_token
 
     def get_access_token_secret(self):
+        """"Function returns access token secret of session"""
         return self.__access_secret
 
     def sign_in_with_pin(self, pin: str):
+        """"Function tries to sign in with provided pin, estabilishes oauth session and tries to fetch access token
+        
+        Parameters:
+            pin(str): pin provided by Twitter
+        Throws:
+            InvalidPinException: if operations wasn't successful and pin was invalid"""
         oauth = OAuth1Session(
             self.__api_key,
             client_secret=self.__api_secret,

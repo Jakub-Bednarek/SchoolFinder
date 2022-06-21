@@ -4,9 +4,11 @@ import os
 from PyQt5.QtWidgets import QErrorMessage
 
 def load_value_from_script(path):
+    """Function loads file name from provided path"""
     filename = os.path.basename(path)
 
 def run_script_python3(path):
+    """Function runs script using python3 string as execution variable"""
     try:
         subprocess.run(["python3", path])
     except:
@@ -16,6 +18,7 @@ def run_script_python3(path):
         
 
 def run_script_python(path):
+    """Function runs script using python string as execution variable"""
     try:
         subprocess.run(['python', path])
     except:
@@ -24,6 +27,7 @@ def run_script_python(path):
     return True
     
 def run_script(path):
+    """Function tries to run script with python3, then python in case of failure, shows error if none of the methods worked"""
     if not run_script_python3(path):
         if not run_script_python(path):
             error_dialog = QErrorMessage()

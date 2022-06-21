@@ -29,6 +29,7 @@ class LoginScreen(QWidget):
         self.initUI()
 
     def initUI(self):
+        """Function initializes GUI for whole login screen creating all its widgets and setting styles"""
         self.setup_window()
         self.communicate = Communicate()
 
@@ -71,17 +72,27 @@ class LoginScreen(QWidget):
         self.setLayout(layout)
 
     def is_authorized(self):
+        """"Function returns whether user has been authorized successfully
+        
+        Returns:
+            Boolean: status of authorization operation"""
         return self.__success
 
     def setup_window(self):
+        """Function sets up window size"""
         width = int(self.__screen_width / 5)
         height = int(self.__screen_height / 5)
         self.resize(width, height)
 
     def go_to_authorization_page(self):
+        """Function opens Twitter authorization page based on provided URL"""
         open(authenticator.get_authorization_url())
 
     def submit_pin(self):
+        """Function submits pin to the authenticator
+        
+        Throws:
+            InvalidPinException: in case of invalid pin"""
         text = self.__pin_text_area.text()
         try:
             authenticator.sign_in_with_pin(text)
