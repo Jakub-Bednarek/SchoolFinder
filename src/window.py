@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
             Parameters:
                 seconds (int): seconds to set"""
             if seconds is not None:
-                if seconds >= 0 and seconds < 60:
+                if self.__check_if_value_convertible(seconds) and seconds >= 0 and seconds < 60:
                     self.seconds = seconds
                     self.is_interval = True
                 else:
@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
             Parameters:
                 minutes (int): minutes to set"""
             if minutes is not None:
-                if minutes >= 0 and minutes < 60:
+                if self.__check_if_value_convertible(minutes) and minutes >= 0 and minutes < 60:
                     self.minutes = minutes
                     self.is_interval = True
                 else:
@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
             Parameters:
                 hours (int): hours to set"""
             if hours is not None:
-                if hours >= 0 and hours < 24:
+                if self.__check_if_value_convertible(hours) and hours >= 0 and hours < 24:
                     self.hours = hours
                     self.is_interval = True
                 else:
@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
             Parameters:
                 days (int): days to set"""
             if days is not None:
-                if days > 0 and 360:
+                if self.__check_if_value_convertible(days) and days > 0 and 360:
                     self.days = days
                     self.is_interval = True
                 else:
@@ -151,6 +151,15 @@ class MainWindow(QMainWindow):
                 out_str.append(f"\n   Days: {self.days}")
             
             return "".join(out_str)
+
+        def __check_if_value_convertible(self, value):
+            try:
+                return int(value)
+            except:
+                messageBox = QErrorMessage()
+                messageBox.showMessage(f"Invalid value provided: {value}")
+                messageBox.exec_()
+                return False
 
         def __str__(self):
             return f"Seconds: {self.seconds}, Minutes: {self.minutes}, Hours: {self.hours}, Days: {self.days}, datetime: {self.date_time}"
@@ -854,8 +863,8 @@ If there's enough time, Im planning on rewriting app on C++ with server intergra
                 settings.add_days(self.__convert_val(self.__days_line.text()))
             if self.__date_time.isEnabled():
                 settings.add_date_time(self.__date_time.dateTime())
-        except InvalidSettingException as e:
-            self.__show_error_dialog(str(e))
+        except:
+            self.__show_error_dialog("Provided settings are invalid!")
             return None
 
         return settings
@@ -921,10 +930,7 @@ If there's enough time, Im planning on rewriting app on C++ with server intergra
         
         Parameters:
             val (Any): value to be converted"""
-        try:
-            return int(val)
-        except ValueError as e:
-            log_err(e)
+        return int(val)
 
     def __show_error_dialog(self, text):
         """"Function opens QErrorMessage with passed text
