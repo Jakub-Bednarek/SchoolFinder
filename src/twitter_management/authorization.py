@@ -35,10 +35,11 @@ class Authenticator:
             fetch_response = self.__oauth.fetch_request_token(REQUEST_TOKEN_URL)
         except ValueError as e:
             log_err(f"Failed to authenticate with API keys, exiting")
-            pass
+            return False
 
         self.__oauth_token = fetch_response.get("oauth_token")
         self.__oauth_secret = fetch_response.get("oauth_token_secret")
+        return True
 
     def get_authorization_url(self):
         return self.__oauth.authorization_url(BASE_AUTHORIZATION_URL)
@@ -61,7 +62,8 @@ class Authenticator:
         try:
             oauth_tokens = oauth.fetch_access_token(ACCESS_TOKEN_URL)
         except Exception as e:
-            raise InvalidPinException("Couldn't authenticate user with PIN!")
+            self.fetch_api_oauth_tokens()
+            raise InvalidPinException("Couldn't authenticate user with PIN!\nPlease go to website and generate new PIN.")
 
         self.__access_token = oauth_tokens["oauth_token"]
         self.__access_secret = oauth_tokens["oauth_token_secret"]
@@ -71,4 +73,8 @@ class Authenticator:
 
 
 authenticator = Authenticator()
-authenticator.fetch_api_oauth_tokens()
+fetch_output = authenticator.fetch_api_oauth_tokens()
+
+def get_fetch_output():
+    global fetch_output
+    return fetch_output
