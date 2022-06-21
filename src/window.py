@@ -872,6 +872,7 @@ If there's enough time, Im planning on rewriting app on C++ with server intergra
 
         if content:
             self.__test_tweet_text.setPlainText(content)
+            self.__show_info_dialog("Successfully parsed scripts!")
 
 
 main_window = None
