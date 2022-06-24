@@ -874,24 +874,13 @@ If there's enough time, Im planning on rewriting app on C++ with server intergra
     def __check_interval_tweet(self):
         """"Function checks whether current time matches interval settings, if so then posts Tweet"""
         day, hour, min, sec = map(int, time.strftime("%d %H %M %S").split())
-
-        if self.__settings.seconds:
-            if sec % self.__settings.seconds != 0:
-                return
-
-        if self.__settings.minutes:
-            if min % self.__settings.minutes != 0:
-                return
-
-        if self.__settings.hours:
-            if hour % self.__settings.hours != 0:
-                return
-
-        if self.__settings.days:
-            if day % self.__settings.days != 0:
-                return
-
-        self.__post_single_tweet()
+        
+        if sec % 30 == 0:
+            if not self.__posted:
+                self.__post_single_tweet()
+                self.__posted = True
+        else:
+            self.__posted = False
 
     def __check_scheduled_tweet(self):
         """"Function checks whether current time matches scheduled time, if so then posts Tweet and stops timer"""
